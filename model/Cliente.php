@@ -7,6 +7,7 @@ class Cliente {
     private $endereco;
     private $possui_acompanhante;
     private $data_cadastro;
+    private Pacote $pacote;
     private Funcionario $funcionario;
 
     // Getters e Setters
@@ -77,5 +78,18 @@ class Cliente {
 
         return $this;
     }
+
+     public function getPacote(): ?Pacote
+    {
+        return $this->pacote;
+    }
+
+    public function setPacote(?Pacote $pacote): self
+    {
+        $this->pacote = $pacote;
+
+        return $this;
+    }
 }
-?>
+
+   

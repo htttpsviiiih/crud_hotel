@@ -14,10 +14,6 @@ class ClienteService {
             array_push($erros, "Informe o nome do cliente!");
         }
 
-        if (!$cliente->getEmail()) {
-            array_push($erros, "Informe o email do cliente!");
-        }
-
         if (!$cliente->getTelefone()) {
             array_push($erros, "Informe o telefone do cliente!");
         }

@@ -36,19 +36,25 @@ include(__DIR__ . "/../include/header.php");
         <?php foreach ($lista as $cliente): ?>
             <tr>
                 <td><?= $cliente->getIdCliente() ?></td>
-                <td><? $cliente->getNome() ?></td>
+                <td><?= $cliente->getNome() ?></td>
                 <td><?= $cliente->getCpf() ?></td>
                 <td><?= $cliente->getTelefone() ?></td>
-                <td><? $cliente->getEndereco() ?></td>
-                <td><?php 
-                if ($cliente->getPossuiAcompanhante() == 'S') {
-                    echo "Sim";
-                } else {
-                    echo "Não";
-                }
-                ?></td>
+                <td><?= $cliente->getEndereco() ?></td>
+                <td>
+                    <?php
+                    if ($cliente->getPossuiAcompanhante() == 'S') {
+                        echo "Sim";
+                    } else {
+                        echo "Não";
+                    }
+                    ?>
+                </td>
+                <td><?= $cliente->getPacote() ? $cliente->getPacote()->getDescricao() : 'N/A'; ?></td>
                 <td><?= $cliente->getDataCadastro() ?></td>
-                <td><?= $cliente->getIdFuncionario()->getNomeFuncionario() ?></td>
+                <td><?= $cliente->getFuncionario() ? $cliente->getFuncionario()->getNome() : 'N/A' ?></td>
+                <td><a href="form.php?acao=alterar&id=<?= $cliente->getIdCliente() ?>">Alterar</a></td>
+                <td><a href="../../controller/ClienteController.php?acao=excluir&id=<?= $cliente->getIdCliente() ?>" onclick="return confirm('Confirma exclusão?')">Excluir</a></td>
+                <td><a href="detalhes.php?id=<?= $cliente->getIdCliente() ?>">Detalhar</a></td>
             </tr>
         <?php endforeach; ?>
     </tbody>
