@@ -107,15 +107,16 @@ class ClienteDao
 
     public function buscarPorId($id)
     {
-        $sql = "SELECT c.*, f.nome AS nome_funcionario, p.nome_pacote AS nome_pacote
-            FROM cliente c
-            LEFT JOIN funcionario f ON c.id_funcionario = f.id_funcionario
-            LEFT JOIN pacote p ON c.id_pacote = p.id_pacote
-            WHERE c.id_cliente = ?";
+        $sql = "SELECT c.*, f.nome AS nome_funcionario, p.nome_pacote AS nome_pacote, p.descricao AS descricao_pacote, p.preco AS preco_pacote
+        FROM cliente c
+        LEFT JOIN funcionario f ON c.id_funcionario = f.id_funcionario
+        LEFT JOIN pacote p ON c.id_pacote = p.id_pacote
+        WHERE c.id_cliente = :id_cliente";
 
         $stmt = $this->conexao->prepare($sql);
-        $stmt->execute([$id]);
-        $result = $stmt->fetchAll();
+        $stmt->bindValue(':id_cliente', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $clientes = $this->map($result);
 
@@ -179,6 +180,12 @@ class ClienteDao
             $pacote = new Pacote();
             $pacote->setIdPacote($row['id_pacote']);
             $pacote->setNomePacote($row['nome_pacote']);
+            if (isset($row['descricao_pacote'])) {
+                $pacote->setDescricao($row['descricao_pacote']);
+            }
+            if (isset($row['preco_pacote'])) {
+                $pacote->setPreco($row['preco_pacote']);
+            }
             $cliente->setPacote($pacote);
 
             $clientes[] = $cliente;
