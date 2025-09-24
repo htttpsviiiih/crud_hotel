@@ -20,7 +20,7 @@ class ClienteDao
 
     public function listar()
     {
-        $sql = "SELECT c.*, f.nome AS nome_funcionario, p.descricao AS descricao_pacote
+        $sql = "SELECT c.*, f.nome AS nome_funcionario, p.nome_pacote AS nome_pacote
             FROM cliente c
             LEFT JOIN funcionario f ON c.id_funcionario = f.id_funcionario
             LEFT JOIN pacote p ON c.id_pacote = p.id_pacote";
@@ -35,14 +35,20 @@ class ClienteDao
 
     public function inserir(Cliente $cliente)
     {
-        $sql = "INSERT INTO cliente (cpf, telefone, nome, endereco, possui_acompanhante, data_cadastro, id_funcionario, id_pacote)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+
+        $sql = "INSERT INTO cliente 
+            (cpf, telefone, nome, endereco, possui_acompanhante, id_funcionario, id_pacote, data_cadastro)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try {
             $stmt = $this->conexao->prepare($sql);
-            $idFuncionario = $cliente->getFuncionario() ? $cliente->getFuncionario()->getIdFuncionario() : NULL;
 
-            $idPacote = $cliente->getPacote() ? $cliente->getPacote()->getIdPacote() : NULL;
+            $idFuncionario = $cliente->getFuncionario() ? $cliente->getFuncionario()->getIdFuncionario() : null;
+            $idPacote = $cliente->getPacote() ? $cliente->getPacote()->getIdPacote() : null;
+
+            // Se não houver data_cadastro, usar NOW()
+            $dataCadastro = $cliente->getDataCadastro() ?: date('Y-m-d');
 
             $valores = [
                 $cliente->getCpf(),
@@ -50,25 +56,66 @@ class ClienteDao
                 $cliente->getNome(),
                 $cliente->getEndereco(),
                 $cliente->getPossuiAcompanhante(),
-                $cliente->getDataCadastro(),
                 $idFuncionario,
-                $idPacote
+                $idPacote,
+                $dataCadastro
             ];
             $stmt->execute($valores);
-            return NULL;
         } catch (PDOException $e) {
-            return $e->getMessage();
+            return "Erro ao inserir cliente: " . $e->getMessage();
+        }
+    }
+
+    public function alterar(Cliente $cliente)
+    {
+
+        $sql = "UPDATE cliente SET cpf = ?, nome = ?, telefone = ?,
+                        endereco = ?, possui_acompanhante = ?,
+                        id_funcionario = ?, id_pacote = ?,
+                        data_cadastro = ?
+                    WHERE id_cliente = ?";
+
+        try {
+            $stmt = $this->conexao->prepare($sql);
+
+            $idFuncionario = $cliente->getFuncionario() ? $cliente->getFuncionario()->getIdFuncionario() : null;
+            $idPacote = $cliente->getPacote() ? $cliente->getPacote()->getIdPacote() : null;
+
+
+            $dataCadastro = $cliente->getDataCadastro() ?: date('Y-m-d');
+
+            $valores = [
+                $cliente->getCpf(),
+                $cliente->getNome(),
+                $cliente->getTelefone(),
+                $cliente->getEndereco(),
+                $cliente->getPossuiAcompanhante(),
+                $idFuncionario,
+                $idPacote,
+                $dataCadastro,
+                $cliente->getIdCliente()
+            ];
+            if ($stmt->execute($valores)) {
+                return null;
+            }
+        } catch (PDOException $e) {
+            echo "Erro ao inserir cliente: " . $e->getMessage();
+            return false;
         }
     }
 
 
-
-    public function buscarPorId(int $id)
+    public function buscarPorId($id)
     {
-        $sql = "SELECT c.* FROM cliente c WHERE c.id_cliente = ?";
+        $sql = "SELECT c.*, f.nome AS nome_funcionario, p.nome_pacote AS nome_pacote
+            FROM cliente c
+            LEFT JOIN funcionario f ON c.id_funcionario = f.id_funcionario
+            LEFT JOIN pacote p ON c.id_pacote = p.id_pacote
+            WHERE c.id_cliente = ?";
+
         $stmt = $this->conexao->prepare($sql);
         $stmt->execute([$id]);
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $result = $stmt->fetchAll();
 
         $clientes = $this->map($result);
 
@@ -77,39 +124,62 @@ class ClienteDao
         else
             return null;
     }
+    public function buscarPorCpf($cpf): ?Cliente
+    {
+        $sql = "SELECT * FROM cliente WHERE cpf = ?";
+        $stmt = $this->conexao->prepare($sql);
+        $stmt->execute([$cpf]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($row) {
+            return $this->map([$row])[0];
+        }
+        return null;
+    }
+    public function excluir(int $id)
+    {
+        $sql = "DELETE FROM cliente WHERE id_cliente = :id_cliente";
+        try {
+            $stmt = $this->conexao->prepare($sql);
+            $stmt->bindValue(":id_cliente", $id);
+            $stmt->execute();
+            return null;
+        } catch (PDOException $e) {
+            return $e;
+        }
+    }
 
     private function map(array $rows)
     {
         $clientes = [];
         foreach ($rows as $row) {
+
+            $date = new DateTime($row['data_cadastro']);
+            $date = $date->format('Y-m-d');
+
+
             $cliente = new Cliente();
-            $cliente->setIdCliente($row['id_cliente']);
+            $cliente->setIdCliente((int)$row['id_cliente']);
             $cliente->setCpf($row['cpf']);
             $cliente->setTelefone($row['telefone']);
             $cliente->setNome($row['nome']);
             $cliente->setEndereco($row['endereco']);
             $cliente->setPossuiAcompanhante($row['possui_acompanhante']);
-            $cliente->setDataCadastro($row['data_cadastro']);
+
+
+            $cliente->setDataCadastro($date);
 
             // funcionário
-            if (!empty($row['id_funcionario'])) {
-                $func = new Funcionario();
-                $func->setIdFuncionario($row['id_funcionario']);
-                $func->setNome($row['nome_funcionario']);
-                $cliente->setFuncionario($func);
-            } else {
-                $cliente->setFuncionario(null);
-            }
+            $func = new Funcionario();
+            $func->setIdFuncionario($row['id_funcionario']);
+            $func->setNome($row['nome']);
+            $cliente->setFuncionario($func);
 
             // pacote
-            if (!empty($row['id_pacote'])) {
-                $pacote = new Pacote();
-                $pacote->setIdPacote($row['id_pacote']);
-                $pacote->setDescricao($row['descricao_pacote']); 
-                $cliente->setPacote($pacote);
-            } else {
-                $cliente->setPacote(null);
-            }
+            $pacote = new Pacote();
+            $pacote->setIdPacote($row['id_pacote']);
+            $pacote->setNomePacote($row['nome_pacote']);
+            $cliente->setPacote($pacote);
 
             $clientes[] = $cliente;
         }

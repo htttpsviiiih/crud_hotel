@@ -52,5 +52,5 @@ ALTER TABLE cliente
 ADD CONSTRAINT fk_cliente_funcionario 
 FOREIGN KEY (id_funcionario) 
 REFERENCES funcionario(id_funcionario);
-
 ALTER TABLE cliente ADD CONSTRAINT fk_cliente_pacote FOREIGN KEY (id_pacote) REFERENCES pacote(id_pacote);
+ALTER TABLE cliente 

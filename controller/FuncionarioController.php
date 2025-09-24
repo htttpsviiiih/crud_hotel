@@ -13,4 +13,8 @@
             $lista = $this->funcionarioDao->listar();
             return $lista;
         }
+        public function buscarPorId(int $id){
+            $lista = $this->funcionarioDao->buscarPorId($id);
+            return $lista;
+        }
     }

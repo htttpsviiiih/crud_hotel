@@ -1,5 +1,4 @@
 <?php
-//Mostrar erros do PHP
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -7,14 +6,12 @@ require_once(__DIR__ . "/../../controller/ClienteController.php");
 require_once(__DIR__ . "/../../model/Cliente.php");
 require_once(__DIR__ . "/../../model/Funcionario.php");
 require_once(__DIR__ . "/../../model/Pacote.php");
-
 $msgErro = "";
-$cliente = NULL;
+$cliente = null;
 
-//recebendo os dados pra inserir
-if (isset($_POST['nome'])) {
+if (isset($_POST['id_cliente'])) {
 
-    //clicou no gravar 
+    $id_cliente = trim($_POST['id_cliente']) ? trim($_POST['id_cliente']) : NULL;
     $nome = trim($_POST['nome']) ? trim($_POST['nome']) : NULL;
     $cpf = trim($_POST['cpf']) ? ($_POST['cpf']) : NULL;
     $telefone = trim($_POST['telefone']) ? trim($_POST['telefone']) : NULL;
@@ -24,11 +21,9 @@ if (isset($_POST['nome'])) {
     $idFuncionario = is_numeric($_POST['id_funcionario']) ? ($_POST['id_funcionario']) : NULL;
     $idPacote = is_numeric($_POST['id_pacote']) ? ($_POST['id_pacote']) : NULL;
 
-    
-
     //criando o obj
     $cliente = new Cliente();
-    $cliente->setIdCliente(0);
+    $cliente->setIdCliente($id_cliente);
     $cliente->setNome($nome);
     $cliente->setCpf($cpf);
     $cliente->setTelefone($telefone);
@@ -36,10 +31,8 @@ if (isset($_POST['nome'])) {
     $cliente->setPossuiAcompanhante($possuiAcompanhante);
     $cliente->setDataCadastro($data);
 
-    
-
-    // pegar o id do funcionário (suporta id_funcionario ou idFuncionario)
     $idFuncionarioRaw = $_POST['id_funcionario'] ?? $_POST['idFuncionario'] ?? null;
+
     if (!empty($idFuncionarioRaw) && is_numeric($idFuncionarioRaw)) {
         $func = new Funcionario();
         $func->setIdFuncionario((int)$idFuncionarioRaw);
@@ -57,20 +50,29 @@ if (isset($_POST['nome'])) {
     } else {
         $cliente->setPacote(null);
     }
- 
 
     $clienteController = new ClienteController();
-    $erros = $clienteController->inserir($cliente);
+    $erros = $clienteController->alterar($cliente);
 
-
-    if (!$erros) {
+    if (! $erros) {
         //Redirecionar para o listar
         header("location: listar.php");
-        exit;
     } else {
         //Converter o array de erros para string
         $msgErro = implode("<br>", $erros);
     }
-}
+}   else{
+    $id = 0;
+    if(isset($_GET["id_cliente"]))
+        $id = $_GET["id_cliente"];
 
-include_once(__DIR__ . "/form.php");
+    $clienteCont = new ClienteController();
+    $cliente = $clienteCont->buscarPorId($id);
+
+    if(! $cliente) {
+        echo "ID do cliente é inválido!<br>";
+        echo "<a href='listar.php'>Voltar</a>";
+        exit;
+    }
+}
+include_once (__DIR__.'/form.php');

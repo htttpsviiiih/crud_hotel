@@ -33,6 +33,7 @@ include(__DIR__ . "/../include/header.php");
         </tr>
     </thead>
     <tbody>
+       
         <?php foreach ($lista as $cliente): ?>
             <tr>
                 <td><?= $cliente->getIdCliente() ?></td>
@@ -49,12 +50,11 @@ include(__DIR__ . "/../include/header.php");
                     }
                     ?>
                 </td>
-                <td><?= $cliente->getPacote() ? $cliente->getPacote()->getDescricao() : 'N/A'; ?></td>
+                <td><?= $cliente->getPacote() ? $cliente->getPacote()->getNomePacote() : 'N/A'; ?></td>
                 <td><?= $cliente->getDataCadastro() ?></td>
                 <td><?= $cliente->getFuncionario() ? $cliente->getFuncionario()->getNome() : 'N/A' ?></td>
-                <td><a href="form.php?acao=alterar&id=<?= $cliente->getIdCliente() ?>">Alterar</a></td>
-                <td><a href="../../controller/ClienteController.php?acao=excluir&id=<?= $cliente->getIdCliente() ?>" onclick="return confirm('Confirma exclusão?')">Excluir</a></td>
-                <td><a href="detalhes.php?id=<?= $cliente->getIdCliente() ?>">Detalhar</a></td>
+                <td><a href="alterar.php?id_cliente=<?= $cliente->getIdCliente() ?>">Alterar</a></td>
+                <td><a href="excluir.php?id_cliente=<?= $cliente->getIdCliente() ?>" onclick="return confirm('Confirma exclusão?')">Excluir</a></td>
             </tr>
         <?php endforeach; ?>
     </tbody>
